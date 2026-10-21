@@ -1,0 +1,14 @@
+{
+  "name": "spider-sense-weather",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spider-Sense Weather - Android app",
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}
