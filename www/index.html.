@@ -1,0 +1,91 @@
+
+Build apk · YML
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Install dependencies
+        run: npm install
+      - name: Add Android platform
+        run: npx cap add android
+      - name: Allow location and vibration
+        run: |
+          sed -i 's#<application#<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.VIBRATE" />\n    <application#' android/app/src/main/AndroidManifest.xml
+      - name: Draw Spidey icon
+        run: |
+          pip install pillow
+          mkdir -p assets
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw, ImageChops
+          import math
+          RED=(222,28,40,255); BLK=(12,12,18,255); WHT=(255,255,255,255); BLUE=(20,36,106,255)
+ 
+          def mask_art(S, scale):
+              """Spidey face on a transparent SxS canvas, face width = scale*S."""
+              K=2; N=S*K
+              im=Image.new('RGBA',(N,N),(0,0,0,0)); d=ImageDraw.Draw(im)
+              cx=N/2; cy=N/2+0.02*N*scale
+              W=scale*N; H=W*1.22
+              box=(cx-W/2,cy-H/2,cx+W/2,cy+H/2)
+              # face base + web lines clipped to face
+              face=Image.new('L',(N,N),0); ImageDraw.Draw(face).ellipse(box,fill=255)
+              layer=Image.new('RGBA',(N,N),RED); ld=ImageDraw.Draw(layer)
+              wx,wy=cx,cy-H*0.05
+              lw=max(3,int(W*0.012))
+              for k in range(12):
+                  a=math.radians(k*30+15)
+                  ld.line((wx,wy,wx+W*1.2*math.cos(a),wy+W*1.2*math.sin(a)),fill=BLK,width=lw)
+              for r in (0.16,0.30,0.45,0.62,0.82):
+                  rr=W*r
+                  ld.ellipse((wx-rr,wy-rr*1.1,wx+rr,wy+rr*1.1),outline=BLK,width=lw)
+              face_rgba=Image.new('RGBA',(N,N),(0,0,0,0)); face_rgba.paste(layer,(0,0),face)
+              d.ellipse((box[0]-W*0.018,box[1]-W*0.018,box[2]+W*0.018,box[3]+W*0.018),fill=BLK)
+              im.alpha_composite(face_rgba)
+              d=ImageDraw.Draw(im)
+              # eyes
+              def P(x,y): return (cx+x*W, cy+y*W)
+              L=[(-0.47,-0.05),(-0.05,0.12),(-0.10,0.34),(-0.44,0.18)]
+              Rg=[(-x,y) for x,y in L]
+              ow=max(6,int(W*0.03))
+              for pts in (L,Rg):
+                  pp=[P(x,y) for x,y in pts]
+                  d.polygon(pp,fill=WHT)
+                  d.line(pp+[pp[0],pp[1]],fill=BLK,width=ow,joint='curve')
+                  for p in pp: d.ellipse((p[0]-ow/2,p[1]-ow/2,p[0]+ow/2,p[1]+ow/2),fill=BLK)
+              return im.resize((S,S),Image.LANCZOS)
+ 
+          def make_all(out='.'):
+              S=1024
+              # adaptive foreground: face inside the safe zone
+              fg=mask_art(S,0.50); fg.save(f'{out}/icon-foreground.png')
+              Image.new('RGBA',(S,S),BLUE).save(f'{out}/icon-background.png')
+              full=Image.new('RGBA',(S,S),BLUE); full.alpha_composite(mask_art(S,0.62)); full.save(f'{out}/icon-only.png')
+          make_all('assets')
+          PY
+          ls -la assets
+      - name: Apply app icon
+        run: npx capacitor-assets generate --android --iconBackgroundColor '#14246a' --iconBackgroundColorDark '#14246a'
+      - name: Build APK
+        run: |
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Spider-Sense-Weather-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+ 
