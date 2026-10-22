@@ -1,0 +1,281 @@
+www/
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a1230">
+<title>Spider-Sense Weather</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--red:#e5202e;--red2:#ff4b57;--blue:#1b3a9c;--navy:#0a1230;--panel:#101b45;--ink:#f4f6ff;--mute:#9fb0e6;--gold:#ffd23f;
+--hd:'Bangers','Impact','Arial Black',sans-serif;--cn:'Barlow Condensed','Arial Narrow',sans-serif;--bd:'Barlow','Segoe UI',Arial,sans-serif}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{overscroll-behavior:none}
+html{background:var(--navy)}
+body{font-family:var(--bd);color:var(--ink);min-height:100vh;padding:max(14px,env(safe-area-inset-top)) 14px max(20px,env(safe-area-inset-bottom));
+background:radial-gradient(circle at 1px 1px,rgba(229,32,46,.16) 1.2px,transparent 1.6px) 0 0/14px 14px,linear-gradient(160deg,#0a1230 0%,#14246a 55%,#4a0f1c 120%);background-attachment:fixed}
+.wrap{max-width:980px;margin:0 auto;position:relative}
+.webcorner{position:fixed;top:0;left:0;width:260px;height:260px;opacity:.28;pointer-events:none}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.logo{display:flex;align-items:center;gap:10px;margin-right:auto}
+.logo h1{font-family:var(--hd);font-weight:400;font-size:2.1rem;letter-spacing:.04em;line-height:1;text-shadow:3px 3px 0 var(--red)}
+.logo svg{width:40px;height:40px;flex:none}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+input,button{font:inherit;color:inherit}
+input{background:#0a1230;border:2px solid var(--mute);border-radius:8px;padding:9px 12px;min-width:200px}
+input:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button{background:var(--red);border:2px solid #fff;border-radius:8px;padding:9px 14px;font-family:var(--cn);font-weight:700;font-size:1.05rem;cursor:pointer;box-shadow:3px 3px 0 #000;transition:transform .08s,box-shadow .08s}
+button:active{transform:translate(3px,3px);box-shadow:0 0 0 #000}
+button.alt{background:var(--blue)}
+button.on{background:var(--gold);color:#111}
+#results{display:none;background:var(--panel);border:2px solid var(--mute);border-radius:8px;margin-bottom:12px;overflow:hidden}
+#results button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #2a3a7a;border-radius:0;box-shadow:none;background:transparent;font-family:var(--bd);font-weight:400}
+#results button:hover{background:var(--blue)}
+.panel{background:var(--panel);border:3px solid #fff;border-radius:12px;padding:16px;box-shadow:6px 6px 0 var(--red)}
+.hero{display:grid;grid-template-columns:minmax(260px,1fr) 1fr;gap:18px;margin-bottom:16px}
+@media(max-width:720px){.hero{grid-template-columns:1fr}}
+h2{font-family:var(--hd);font-weight:400;font-size:1.5rem;letter-spacing:.04em;margin-bottom:8px}
+.place{font-family:var(--cn);font-weight:700;font-size:1.3rem;color:var(--mute)}
+.temp{font-family:var(--hd);font-size:6rem;line-height:1;text-shadow:4px 4px 0 var(--red)}
+.cond{font-family:var(--cn);font-size:1.5rem;font-weight:700}
+.sense{display:inline-block;margin-top:10px;padding:6px 12px;border:2px solid #fff;border-radius:6px;font-family:var(--hd);font-size:1.3rem;letter-spacing:.05em;background:var(--lvl,var(--blue));color:#111}
+.sub{color:var(--mute);margin-top:6px;font-size:.95rem}
+#radar{width:100%;max-width:340px;display:block;margin:0 auto}
+.alerts{display:grid;gap:8px;margin-bottom:16px}
+.alert{border-left:8px solid var(--gold);background:#1a2760;border-radius:6px;padding:10px 12px;font-weight:600}
+.alert.hot{border-color:var(--red2)}
+.alert.ok{border-color:#49d17a}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.tile{background:#0a1230;border:2px solid #3a4c9a;border-radius:10px;padding:10px 12px}
+.tile b{display:block;font-family:var(--cn);font-size:.95rem;color:var(--mute);font-weight:500}
+.tile span{font-family:var(--cn);font-size:1.7rem;font-weight:700}
+.tile small{display:block;color:var(--mute);font-size:.8rem}
+.compass{width:42px;height:42px;float:right}
+.two{display:grid;grid-template-columns:1fr;gap:16px}
+.scroll{overflow-x:auto}
+#hourly{min-width:640px;width:100%;display:block}
+.day{display:grid;grid-template-columns:62px 34px 1fr 54px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed #2a3a7a;font-family:var(--cn);font-size:1.15rem;font-weight:700}
+.range{position:relative;height:10px;background:#0a1230;border-radius:5px;border:1px solid #3a4c9a}
+.range i{position:absolute;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,#4aa3ff,var(--gold),var(--red2))}
+.day em{font-style:normal;color:var(--mute);font-weight:500;font-size:.95rem;display:block;text-align:right}
+.status{text-align:center;color:var(--mute);padding:30px 10px;font-family:var(--cn);font-size:1.3rem}
+footer{margin-top:18px;color:var(--mute);font-size:.8rem;text-align:center}
+.swing{animation:swing 1.4s ease-in-out infinite;transform-origin:50% 0}
+@keyframes swing{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@media(prefers-reduced-motion:reduce){.swing{animation:none}button{transition:none}}
+</style>
+</head>
+<body>
+<svg class="webcorner" viewBox="0 0 200 200" fill="none" stroke="#fff" stroke-width="1" aria-hidden="true">
+<path d="M0 0L200 0M0 0L170 70M0 0L110 140M0 0L50 190M0 0L0 200"/>
+<path d="M40 0Q30 30 0 40M80 0Q60 60 0 80M120 0Q90 90 0 120M160 0Q120 120 0 160"/>
+</svg>
+<div class="wrap">
+<header>
+ <div class="logo">
+  <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#e5202e" stroke="#fff" stroke-width="2"/><g stroke="#111" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M20 12v16M14 14l12 12M26 14L14 26M11 20h18"/></g><circle cx="20" cy="20" r="4" fill="#111"/></svg>
+  <h1>Spider-Sense Weather</h1>
+ </div>
+ <div class="bar">
+  <input id="q" type="search" placeholder="Search a city" aria-label="Search a city" autocomplete="off">
+  <button id="go">Search</button>
+  <button id="loc" class="alt">Use my location</button>
+ </div>
+</header>
+<div class="bar" style="margin-bottom:12px">
+ <button id="uT" class="alt">°C</button>
+ <button id="uW" class="alt">km/h</button>
+ <button id="say" class="alt">Hear briefing</button>
+ <button id="copy" class="alt">Copy report</button>
+ <button id="refresh" class="alt">Refresh</button>
+</div>
+<div id="results" role="listbox" aria-label="Search results"></div>
+<main id="app"><div class="status">Choose a place. Tap “Use my location” or search for a city.</div></main>
+<footer>Live data from Open-Meteo. Last snapshot is saved on this device, so the app still opens offline.</footer>
+</div>
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)};
+var S={lat:null,lon:null,name:'',u:{t:'C',w:'kmh'},d:null,offline:false};
+function store(k,v){try{if(v===undefined){return JSON.parse(localStorage.getItem(k))}localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+var su=store('ssw-units');if(su){S.u=su}
+function T(c){return S.u.t==='C'?Math.round(c)+'°':Math.round(c*9/5+32)+'°'}
+function W(k){return S.u.w==='kmh'?Math.round(k)+' km/h':Math.round(k*0.621371)+' mph'}
+function clamp(v){return Math.max(0,Math.min(100,v))}
+function wx(c){
+ if(c===0)return['☀️','Clear sky'];if(c<=2)return['🌤️','Mostly clear'];if(c===3)return['☁️','Overcast'];
+ if(c<=48)return['🌫️','Fog'];if(c<=57)return['🌦️','Drizzle'];if(c<=67)return['🌧️','Rain'];
+ if(c<=77)return['🌨️','Snow'];if(c<=82)return['🌧️','Rain showers'];if(c<=86)return['🌨️','Snow showers'];
+ return['⛈️','Thunderstorm']}
+function dir(d){return['N','NE','E','SE','S','SW','W','NW'][Math.round(d/45)%8]}
+function hhmm(iso){return iso.slice(11,16)}
+function uvTxt(u){return u<3?'Low':u<6?'Moderate':u<8?'High':u<11?'Very high':'Extreme'}
+function aqiTxt(a){return a<=50?'Good':a<=100?'Moderate':a<=150?'Unhealthy for some':a<=200?'Unhealthy':'Very unhealthy'}
+
+function metrics(d){
+ var c=d.cur,i=d.i,h=d.h,next12=h.pp.slice(i,i+12);
+ var rain=Math.max.apply(null,next12.concat([c.precipitation>0?60:0]));
+ return[
+  {k:'Temp',v:clamp(Math.abs(c.apparent_temperature-22)*5)},
+  {k:'Wind',v:clamp(c.wind_gusts_10m/80*100)},
+  {k:'Rain',v:clamp(rain)},
+  {k:'UV',v:clamp((h.uv[i]||0)/11*100)},
+  {k:'Air',v:clamp((d.air.us_aqi||0)/200*100)},
+  {k:'Muggy',v:clamp((h.dew[i]-10)/15*100)}]}
+
+function level(ms){
+ var mx=Math.max.apply(null,ms.map(function(m){return m.v})),av=ms.reduce(function(a,m){return a+m.v},0)/ms.length;
+ var s=Math.round(mx*0.6+av*0.4);
+ if(s<25)return{s:s,n:'Quiet',c:'#49d17a'};if(s<45)return{s:s,n:'Tingling',c:'#ffd23f'};
+ if(s<65)return{s:s,n:'Buzzing',c:'#ff9a3c'};return{s:s,n:'Danger!',c:'#ff4b57'}}
+
+function alerts(d){
+ var c=d.cur,i=d.i,h=d.h,out=[];
+ var soon=-1;for(var k=0;k<12;k++){if((h.pp[i+k]||0)>=60){soon=k;break}}
+ if(c.weather_code>=95)out.push(['hot','Thunderstorm overhead. Stay indoors and away from open ground.']);
+ if(soon===0)out.push(['','Rain is likely right now (' +h.pp[i]+'% chance this hour).']);
+ else if(soon>0)out.push(['','Rain likely in about '+soon+' hour'+(soon>1?'s':'')+' ('+h.pp[i+soon]+'% chance). Take a jacket.']);
+ if(c.wind_gusts_10m>=50)out.push(['hot','Strong gusts up to '+W(c.wind_gusts_10m)+'. Secure loose items.']);
+ if((h.uv[i]||0)>=8)out.push(['hot','UV is '+uvTxt(h.uv[i]).toLowerCase()+' ('+Math.round(h.uv[i])+'). Use sunscreen and shade.']);
+ else if((h.uv[i]||0)>=6)out.push(['','UV is high ('+Math.round(h.uv[i])+'). Sun protection helps.']);
+ if((d.air.us_aqi||0)>150)out.push(['hot','Air quality is '+aqiTxt(d.air.us_aqi).toLowerCase()+' (AQI '+d.air.us_aqi+'). Limit time outdoors.']);
+ else if((d.air.us_aqi||0)>100)out.push(['','Air quality is moderate (AQI '+d.air.us_aqi+'). Sensitive people should take care.']);
+ if(c.apparent_temperature>=38)out.push(['hot','It feels like '+T(c.apparent_temperature)+'. Drink water and rest in shade.']);
+ if(c.apparent_temperature<=5)out.push(['','It feels like '+T(c.apparent_temperature)+'. Dress in warm layers.']);
+ if((h.vis[i]||99999)<2000)out.push(['','Visibility is low ('+(h.vis[i]/1000).toFixed(1)+' km). Drive carefully.']);
+ if(!out.length)out.push(['ok','All quiet. Nothing out of the ordinary in the next few hours.']);
+ return out}
+
+function radarSVG(ms){
+ var cx=150,cy=150,R=100,n=ms.length;
+ function pt(i,v){var a=(-90+i*360/n)*Math.PI/180;return[cx+R*v/100*Math.cos(a),cy+R*v/100*Math.sin(a)]}
+ var s='<svg id="radar" viewBox="0 0 300 300" role="img" aria-label="Threat radar">';
+ [25,50,75,100].forEach(function(r){s+='<polygon points="'+ms.map(function(_,i){return pt(i,r).join(',')}).join(' ')+'" fill="none" stroke="#9fb0e6" stroke-opacity="'+(r===100?.9:.45)+'" stroke-width="1.2"/>'});
+ ms.forEach(function(_,i){var p=pt(i,100);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="#9fb0e6" stroke-opacity=".6"/>'});
+ s+='<polygon points="'+ms.map(function(m,i){return pt(i,Math.max(m.v,6)).join(',')}).join(' ')+'" fill="#e5202e" fill-opacity=".55" stroke="#ff4b57" stroke-width="3" stroke-linejoin="round"/>';
+ ms.forEach(function(m,i){var p=pt(i,Math.max(m.v,6)),l=pt(i,128);
+  s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4.5" fill="#fff" stroke="#111" stroke-width="1.5"/>';
+  s+='<text x="'+l[0]+'" y="'+(l[1]+4)+'" text-anchor="middle" fill="#f4f6ff" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="15">'+m.k+' '+Math.round(m.v)+'</text>'});
+ return s+'</svg>'}
+
+function hourlySVG(d){
+ var h=d.h,i=d.i,N=24,w=720,ht=170,px=26,top=18,bot=30,pw=w-px*2,ph=ht-top-bot;
+ var ts=h.t2.slice(i,i+N),mn=Math.min.apply(null,ts),mx=Math.max.apply(null,ts);if(mx-mn<4){mx+=2;mn-=2}
+ function X(k){return px+pw*k/(N-1)}
+ function Y(v){return top+ph*(1-(v-mn)/(mx-mn))}
+ var s='<svg id="hourly" viewBox="0 0 '+w+' '+ht+'" role="img" aria-label="Next 24 hours">';
+ for(var k=0;k<N;k++){var p=h.pp[i+k]||0;s+='<line x1="'+X(k)+'" y1="'+(ht-bot)+'" x2="'+X(k)+'" y2="'+(ht-bot-ph*p/100)+'" stroke="#4aa3ff" stroke-width="5" stroke-linecap="round" stroke-opacity=".7"/>'}
+ s+='<polyline fill="none" stroke="#ff4b57" stroke-width="3.5" stroke-linejoin="round" points="'+ts.map(function(v,k){return X(k)+','+Y(v)}).join(' ')+'"/>';
+ ts.forEach(function(v,k){
+  s+='<circle cx="'+X(k)+'" cy="'+Y(v)+'" r="3.5" fill="#fff"/>';
+  if(k%3===0){s+='<text x="'+X(k)+'" y="'+(Y(v)-9)+'" text-anchor="middle" fill="#fff" font-family="Barlow Condensed,sans-serif" font-weight="700" font-size="15">'+T(v)+'</text>';
+   s+='<text x="'+X(k)+'" y="'+(ht-8)+'" text-anchor="middle" fill="#9fb0e6" font-family="Barlow Condensed,sans-serif" font-size="14">'+hhmm(h.time[i+k])+'</text>'}});
+ return s+'</svg>'}
+
+function compass(deg){
+ return '<svg class="compass" viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="19" fill="none" stroke="#9fb0e6" stroke-width="2"/><g transform="rotate('+(deg+180)+' 21 21)"><path d="M21 6L27 26L21 22L15 26Z" fill="#e5202e" stroke="#fff" stroke-width="1.2"/></g></svg>'}
+
+function summary(d){
+ var c=d.cur,w=wx(c.weather_code)[1],L=level(metrics(d)),a=alerts(d)[0][1];
+ return 'Weather for '+S.name+'. '+w+', '+T(c.temperature_2m).replace('°',' degrees')+', feels like '+T(c.apparent_temperature).replace('°',' degrees')+'. Spider-sense level: '+L.n+'. '+a}
+
+function render(){
+ var d=S.d;if(!d)return;
+ var c=d.cur,i=d.i,w=wx(c.weather_code),ms=metrics(d),L=level(ms),h=d.h,dl=d.daily;
+ var allMin=Math.min.apply(null,dl.tmin),allMax=Math.max.apply(null,dl.tmax);
+ var days='';
+ dl.time.forEach(function(t,k){
+  var nm=k===0?'Today':new Date(t+'T12:00').toLocaleDateString(undefined,{weekday:'short'});
+  var l=(dl.tmin[k]-allMin)/(allMax-allMin)*100,r=(dl.tmax[k]-allMin)/(allMax-allMin)*100;
+  days+='<div class="day"><span>'+nm+'</span><span>'+wx(dl.code[k])[0]+'</span><div><div class="range" title="'+T(dl.tmin[k])+' to '+T(dl.tmax[k])+'"><i style="left:'+l+'%;right:'+(100-r)+'%"></i></div><div style="display:flex;justify-content:space-between;font-weight:500;color:#9fb0e6;font-size:.95rem"><span>'+T(dl.tmin[k])+'</span><span>'+T(dl.tmax[k])+'</span></div></div><em>'+(dl.pp[k]||0)+'% rain</em></div>'});
+ var aqi=d.air.us_aqi,uv=h.uv[i]||0;
+ var tiles=[
+  ['Feels like',T(c.apparent_temperature),''],
+  ['Humidity',c.relative_humidity_2m+'%','Dew point '+T(h.dew[i])],
+  ['Wind',W(c.wind_speed_10m)+compass(c.wind_direction_10m),'From '+dir(c.wind_direction_10m)+', gusts '+W(c.wind_gusts_10m)],
+  ['Pressure',Math.round(c.pressure_msl)+' hPa',d.trend],
+  ['UV index',Math.round(uv),uvTxt(uv)],
+  ['Air quality',aqi==null?'n/a':aqi,aqi==null?'':aqiTxt(aqi)+' · PM2.5 '+Math.round(d.air.pm2_5)],
+  ['Visibility',((h.vis[i]||0)/1000).toFixed(1)+' km','Cloud cover '+c.cloud_cover+'%'],
+  ['Sunrise',hhmm(dl.sr[0]),'Sunset '+hhmm(dl.ss[0])]];
+ $('#app').innerHTML=
+ '<section class="hero">'+
+  '<div class="panel"><div class="place">'+S.name+(S.offline?' · offline snapshot':'')+'</div>'+
+   '<div class="temp">'+T(c.temperature_2m)+'</div><div class="cond">'+w[0]+' '+w[1]+'</div>'+
+   '<div class="sense" style="--lvl:'+L.c+'">Spider-sense: '+L.n+'</div>'+
+   '<div class="sub">Threat score '+L.s+' of 100 · High '+T(dl.tmax[0])+' · Low '+T(dl.tmin[0])+'</div>'+
+   '<div class="sub">Updated '+c.time.replace('T',' ')+' local time</div></div>'+
+  '<div class="panel"><h2>Threat web</h2>'+radarSVG(ms)+'</div>'+
+ '</section>'+
+ '<section class="alerts">'+alerts(d).map(function(a){return '<div class="alert '+a[0]+'">'+a[1]+'</div>'}).join('')+'</section>'+
+ '<section class="grid">'+tiles.map(function(t){return '<div class="tile"><b>'+t[0]+'</b><span>'+t[1]+'</span><small>'+t[2]+'</small></div>'}).join('')+'</section>'+
+ '<section class="two"><div class="panel"><h2>Next 24 hours</h2><div class="scroll">'+hourlySVG(d)+'</div><div class="sub">Red line is temperature. Blue strands are rain chance.</div></div>'+
+ '<div class="panel"><h2>7-day forecast</h2>'+days+'</div></section>';
+ $('#uT').textContent='°'+S.u.t;$('#uW').textContent=S.u.w==='kmh'?'km/h':'mph'}
+
+function parse(f,a){
+ var c=f.current,H=f.hourly,D=f.daily,i=0;
+ for(var k=0;k<H.time.length;k++){if(H.time[k].slice(0,13)===c.time.slice(0,13)){i=k;break}}
+ var p=H.pressure_msl||[],tr='Steady';
+ if(p.length&&i>=3){var df=p[i]-p[i-3];tr=df>1?'Rising':df<-1?'Falling':'Steady'}
+ return{cur:c,i:i,air:a.current||{},trend:tr,
+  h:{time:H.time,t2:H.temperature_2m,pp:H.precipitation_probability,uv:H.uv_index,vis:H.visibility,dew:H.dew_point_2m},
+  daily:{time:D.time,code:D.weather_code,tmax:D.temperature_2m_max,tmin:D.temperature_2m_min,sr:D.sunrise,ss:D.sunset,pp:D.precipitation_probability_max}}}
+
+function load(lat,lon,name){
+ S.lat=lat;S.lon=lon;S.name=name;$('#app').innerHTML='<div class="status"><span class="swing" style="display:inline-block">🕷️</span> Scanning the skies…</div>';
+ var fu='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,uv_index,visibility,dew_point_2m,pressure_msl&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=auto&forecast_days=7';
+ var au='https://air-quality-api.open-meteo.com/v1/air-quality?latitude='+lat+'&longitude='+lon+'&current=us_aqi,pm2_5,pm10,ozone&timezone=auto';
+ Promise.all([fetch(fu).then(function(r){if(!r.ok)throw 0;return r.json()}),fetch(au).then(function(r){return r.ok?r.json():{}}).catch(function(){return{}})])
+ .then(function(r){S.offline=false;store('ssw-last',{lat:lat,lon:lon,name:name,f:r[0],a:r[1]});S.d=parse(r[0],r[1]);render()})
+ .catch(function(){
+  var c=store('ssw-last');
+  if(c&&c.f){S.offline=true;S.name=c.name;S.lat=c.lat;S.lon=c.lon;S.d=parse(c.f,c.a);render()}
+  else $('#app').innerHTML='<div class="status">Could not reach the weather service. Check your connection and tap Refresh.</div>'})}
+
+function locate(){
+ if(!navigator.geolocation){$('#app').innerHTML='<div class="status">Location is not available here. Search for a city instead.</div>';return}
+ $('#app').innerHTML='<div class="status">Finding you…</div>';
+ navigator.geolocation.getCurrentPosition(function(p){
+  var la=p.coords.latitude,lo=p.coords.longitude;
+  load(la,lo,'Your location')},
+ function(){$('#app').innerHTML='<div class="status">Location permission was denied. Search for a city instead.</div>'},{timeout:10000,maximumAge:600000})}
+
+function search(){
+ var q=$('#q').value.trim();if(!q)return;
+ fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=5&language=en').then(function(r){return r.json()}).then(function(j){
+  var box=$('#results');
+  if(!j.results){box.style.display='block';box.innerHTML='<button disabled>No city found. Try another spelling.</button>';return}
+  box.style.display='block';box.innerHTML='';
+  j.results.forEach(function(r){
+   var b=document.createElement('button');b.textContent=r.name+(r.admin1?', '+r.admin1:'')+', '+(r.country||'');
+   b.onclick=function(){box.style.display='none';$('#q').value='';load(r.latitude,r.longitude,r.name+(r.country?', '+r.country:''))};
+   box.appendChild(b)})
+ }).catch(function(){var box=$('#results');box.style.display='block';box.innerHTML='<button disabled>Search failed. Check your connection.</button>'})}
+
+$('#go').onclick=search;
+$('#q').addEventListener('keydown',function(e){if(e.key==='Enter')search()});
+$('#loc').onclick=locate;
+$('#refresh').onclick=function(){if(S.lat!=null)load(S.lat,S.lon,S.name)};
+$('#uT').onclick=function(){S.u.t=S.u.t==='C'?'F':'C';store('ssw-units',S.u);render()};
+$('#uW').onclick=function(){S.u.w=S.u.w==='kmh'?'mph':'kmh';store('ssw-units',S.u);render()};
+$('#say').onclick=function(){
+ if(!S.d)return;
+ if(!('speechSynthesis' in window)){alert('Speech is not supported in this browser.');return}
+ speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(summary(S.d)))};
+$('#copy').onclick=function(){
+ if(!S.d)return;
+ var txt=summary(S.d)+' Wind '+W(S.d.cur.wind_speed_10m)+', humidity '+S.d.cur.relative_humidity_2m+'%, AQI '+(S.d.air.us_aqi==null?'n/a':S.d.air.us_aqi)+'.';
+ var b=$('#copy');
+ (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy report'},1500)}).catch(function(){prompt('Copy this report:',txt)})};
+
+var last=store('ssw-last');
+if(last&&last.f){S.name=last.name;S.lat=last.lat;S.lon=last.lon;S.d=parse(last.f,last.a);S.offline=true;render();load(last.lat,last.lon,last.name)}
+else locate();
+})();
+</script>
+</body>
+</html>
