@@ -30,4 +30,4 @@ Location permissions to add above the <application> tag:
 ## Notes
 - The app screen lives in www/index.html and is bundled inside the APK.
 - It needs internet for live weather and keeps the last snapshot for offline opening.
-- This is a debug-signed APK for personal use. Publishing to Google Play needs a release signing key.
+
